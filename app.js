@@ -1,127 +1,53 @@
-// =============================
-// 🚀 MYUSDT Multi-Chain Dashboard
-// =============================
+import Web3 from "web3";
+import { abi as UNISWAP_PAIR_ABI } from "./UniswapV2Pair.json"; 
+import { abi as ERC20_ABI } from "./ERC20.json";
 
-// 🔌 RPC URLs (frontend-safe, no .env)
-const RPCS = {
-  sepolia: "https://sepolia.infura.io/v3/afc846803e384cc583a4a260f693cd71",
-  bscTestnet: "https://data-seed-prebsc-1-s1.binance.org:8545/"
+const web3 = new Web3(window.ethereum);
+
+// 🔹 Router Addresses
+const ROUTERS = {
+  sepolia: "0xeE567Fe1712Faf6149d80dA1E6934E354124CfE3",   // UniswapV2Router02 (Sepolia)
+  bscTestnet: "0x9Ac64Cc6e4415144C455BD8E4837Fea55603e5c3" // PancakeV2Router02 (BSC Testnet)
 };
 
-// 📜 Token + LP Config (single source of truth)
-const CONFIG = {
-  token: {
-    name: "MYUSDT",
-    symbol: "MYUSDT",
-    decimals: 18
+// 🔹 Pair Addresses (👉 replace with actual ones from your TX logs)
+const PAIRS = {
+  sepolia: "0xYOUR_SEPOLIA_PAIR_ADDRESS",   // MYUSDT/ETH
+  bscTestnet: "0xYOUR_BSC_PAIR_ADDRESS"     // MYUSDT/BNB
+};
+
+// 🔹 Token Addresses
+const TOKENS = {
+  sepolia: {
+    MYUSDT: "0xc6C465b8E56757DB8dC54D7E11D0194182FEB475", // your Sepolia MYUSDT
+    WETH:   "0x7751A2Ffa53c21e2493602FD06a4eC9c76C91b93"  // WETH on Sepolia
   },
-  contracts: {
-    sepolia: "0xc6C465b8E56757DB8dC54D7E11D0194182FEB475",   // Sepolia token
-    bscTestnet: "0x1c7e5094413Be138C1561D05c2Be92364d74b5b2", // BSC Testnet token
-    vault: "0xb75598a18D6A4eA87769f680F2264AF6f0E61f64"       // Vault
-  },
-  lp: {
-    sepolia: "0x0000000000000000000000000000000000000000",    // Replace with actual Uniswap LP
-    bscTestnet: "0x0000000000000000000000000000000000000000"  // Replace with actual Pancake LP
+  bscTestnet: {
+    MYUSDT: "0x1c7e...YOUR_BSC_TOKEN", // your BSC MYUSDT
+    WBNB:   "0xae13d989dac2f0debff460ac112a837c89baa7cd" // WBNB on BSC Testnet
   }
 };
 
-// 🛠 Minimal ERC20 ABI
-const ERC20_ABI = [
-  "function totalSupply() view returns (uint256)",
-  "function balanceOf(address) view returns (uint256)"
-];
-
-// 🌊 LP ABI
-const LP_ABI = [
-  "function getReserves() view returns (uint112 reserve0, uint112 reserve1, uint32 blockTimestampLast)"
-];
-
-// 🔗 Providers (auto-built from RPC list)
-const ethersProvider = {};
-for (const [net, url] of Object.entries(RPCS)) {
-  ethersProvider[net] = new ethers.providers.JsonRpcProvider(url);
+async function connectWallet() {
+  await window.ethereum.request({ method: "eth_requestAccounts" });
+  const accounts = await web3.eth.getAccounts();
+  document.getElementById("walletAddress").innerText = accounts[0];
+  return accounts[0];
 }
 
-// =============================
-// 📊 Dashboard Functions
-// =============================
+async function loadPair(chain) {
+  const pairAddress = PAIRS[chain];
+  const pairContract = new web3.eth.Contract(UNISWAP_PAIR_ABI, pairAddress);
 
-// Load token + vault balances
-async function loadTokenData() {
-  try {
-    for (const [network, contractAddress] of Object.entries(CONFIG.contracts)) {
-      if (network === "vault") continue; // Skip vault itself
+  const token0 = await pairContract.methods.token0().call();
+  const token1 = await pairContract.methods.token1().call();
+  const reserves = await pairContract.methods.getReserves().call();
 
-      const token = new ethers.Contract(contractAddress, ERC20_ABI, ethersProvider[network]);
-
-      const [supply, vaultBalance] = await Promise.all([
-        token.totalSupply(),
-        token.balanceOf(CONFIG.contracts.vault)
-      ]);
-
-      document.getElementById(`supply-${network}`).innerText =
-        ethers.utils.formatUnits(supply, CONFIG.token.decimals);
-
-      document.getElementById(`vault-${network}`).innerText =
-        ethers.utils.formatUnits(vaultBalance, CONFIG.token.decimals);
-    }
-  } catch (err) {
-    console.error("❌ Error loading token data:", err);
-  }
+  console.log(`Pair on ${chain}:`, { token0, token1, reserves });
+  document.getElementById("pairInfo").innerText =
+    `Chain: ${chain}\nToken0: ${token0}\nToken1: ${token1}\nReserves: ${JSON.stringify(reserves)}`;
 }
 
-// Load LP reserves
-async function loadLPData() {
-  try {
-    for (const [network, lpAddress] of Object.entries(CONFIG.lp)) {
-      const element = document.getElementById(`lp-${network}`);
-
-      if (!element) continue; // Skip if no element in HTML
-
-      if (!lpAddress || lpAddress === "0x0000000000000000000000000000000000000000") {
-        element.innerText = "LP not deployed yet.";
-        continue;
-      }
-
-      const lp = new ethers.Contract(lpAddress, LP_ABI, ethersProvider[network]);
-      const { reserve0, reserve1 } = await lp.getReserves();
-
-      element.innerText = `Reserves: ${ethers.utils.formatUnits(reserve0, CONFIG.token.decimals)} / ${ethers.utils.formatUnits(reserve1, CONFIG.token.decimals)}`;
-    }
-  } catch (err) {
-    console.error("❌ Error loading LP data:", err);
-  }
-}
-
-// Show "Last Updated" timestamp
-function updateTimestamp() {
-  const ts = new Date().toLocaleString();
-  document.getElementById("last-updated").innerText = `Last Updated: ${ts}`;
-}
-
-// =============================
-// 🚀 Init Dashboard
-// =============================
-async function initDashboard() {
-  await loadTokenData();
-  await loadLPData();
-  updateTimestamp();
-}
-
-// Manual refresh handler
-function manualRefresh() {
-  initDashboard();
-}
-
-// Refresh every 30s for live data
-window.addEventListener("load", () => {
-  initDashboard();
-  setInterval(initDashboard, 30_000);
-
-  // Attach refresh button if exists
-  const refreshBtn = document.getElementById("refresh-btn");
-  if (refreshBtn) {
-    refreshBtn.addEventListener("click", manualRefresh);
-  }
-});
+document.getElementById("connectBtn").addEventListener("click", connectWallet);
+document.getElementById("loadSepoliaPair").addEventListener("click", () => loadPair("sepolia"));
+document.getElementById("loadBscPair").addEventListener("click", () => loadPair("bscTestnet"));
