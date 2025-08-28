@@ -1,2 +1,2 @@
 # mysite
-Ethereum Sipolia &amp; Mainnet + bscTestnet &amp; BNB Mainnet
+MYUSDT Multi-Chain Dashboard
