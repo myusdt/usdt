@@ -44,11 +44,10 @@ function formatBalance(balance, decimals=18){ return Number(balance)/10**decimal
 
 // Connect Wallet
 async function connectWallet(){
-  if(!window.ethereum){ alert("MetaMask not detected!"); return; }
-  const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
-  const addrEl = document.getElementById("walletAddress");
-  if(addrEl) addrEl.innerText = accounts[0];
-  return accounts[0];
+  if (window.ethereum) {
+  const web3 = new Web3(window.ethereum);
+} else {
+  alert("MetaMask is required!");
 }
 
 // Load Token Data
