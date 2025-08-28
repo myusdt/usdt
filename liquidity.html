@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>MYUSDT Dashboard — Liquidity Pools</title>
   <link rel="stylesheet" href="styles.css">
+
+  <script src="https://cdn.jsdelivr.net/npm/web3@1.9.0/dist/web3.min.js"></script>
+  <script src="https://cdn.ethers.io/lib/ethers-5.7.umd.min.js"></script>
 </head>
 <body>
   <header>
@@ -20,14 +23,14 @@
     <section class="card">
       <h2>Uniswap (SepoliaETH)</h2>
       <p><strong>LP Reserves:</strong></p>
-      <pre id="lp-sepolia">Loading...</pre>
+      <pre id="uniReserves">Loading...</pre>
       <button id="refreshUni">🔄 Refresh Uniswap</button>
     </section>
 
     <section class="card">
       <h2>PancakeSwap (BSC Testnet)</h2>
       <p><strong>LP Reserves:</strong></p>
-      <pre id="lp-bscTestnet">Loading...</pre>
+      <pre id="pancakeReserves">Loading...</pre>
       <button id="refreshPancake">🔄 Refresh PancakeSwap</button>
     </section>
   </main>
@@ -36,18 +39,14 @@
     <div class="refresh-section">
       <p id="last-updated">Last updated: --</p>
     </div>
-    <p>Powered by ethers.js | MYUSDT Multi-Chain Dashboard</p>
+    <p>Powered by Web3.js & ethers.js | MYUSDT Multi-Chain Dashboard</p>
   </footer>
 
-  <!-- Load ethers.js -->
-  <script src="https://cdn.ethers.io/lib/ethers-5.7.umd.min.js"></script>
-  <!-- Load app.js -->
   <script src="app.js"></script>
 
   <script>
     const lastUpdated = document.getElementById("last-updated");
 
-    // Refresh Uniswap (Sepolia) LP data
     document.getElementById("refreshUni").addEventListener("click", async () => {
       if (typeof loadLPData === "function") {
         await loadLPData("sepolia");
@@ -55,7 +54,6 @@
       }
     });
 
-    // Refresh PancakeSwap (BSC) LP data
     document.getElementById("refreshPancake").addEventListener("click", async () => {
       if (typeof loadLPData === "function") {
         await loadLPData("bscTestnet");

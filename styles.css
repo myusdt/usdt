@@ -1,6 +1,4 @@
-/* =========================
-   Reset & Base Styles
-   ========================= */
+/* Reset */
 * {
   margin: 0;
   padding: 0;
@@ -16,9 +14,7 @@ body {
   margin: 0;
 }
 
-/* =========================
-   Header & Navigation
-   ========================= */
+/* Header */
 header {
   background: #1e293b;
   color: #fff;
@@ -26,16 +22,10 @@ header {
   text-align: center;
   border-bottom: 4px solid #3b82f6;
 }
-
 header h1 {
   font-size: 1.8rem;
   margin-bottom: 0.5rem;
 }
-
-nav {
-  margin-top: 0.5rem;
-}
-
 nav a {
   color: #93c5fd;
   text-decoration: none;
@@ -43,14 +33,9 @@ nav a {
   margin: 0 0.8rem;
   transition: color 0.2s ease;
 }
+nav a:hover { color: #fff; }
 
-nav a:hover {
-  color: #fff;
-}
-
-/* =========================
-   Main Content Layout
-   ========================= */
+/* Main */
 main {
   max-width: 900px;
   margin: 2rem auto;
@@ -60,23 +45,19 @@ main {
   gap: 1.5rem;
 }
 
-/* =========================
-   Card Components
-   ========================= */
+/* Card */
 .card {
   background: #fff;
   border-radius: 12px;
   padding: 1.5rem;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.06);
   border: 1px solid #e5e7eb;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
-
 .card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
 }
-
 .card h2 {
   font-size: 1.3rem;
   color: #1e293b;
@@ -84,65 +65,21 @@ main {
   border-left: 4px solid #3b82f6;
   padding-left: 0.6rem;
 }
-
-.card p {
-  font-size: 1rem;
-  margin: 0.4rem 0;
-}
-
-.card strong {
-  color: #111827;
-}
-
-/* =========================
-   Buttons
-   ========================= */
+.card p { font-size: 1rem; margin: 0.4rem 0; }
+.card strong { color: #111827; }
 button {
-  cursor: pointer;
-  background-color: #3b82f6; /* theme highlight */
-  color: white;
+  background-color: #3b82f6;
+  color: #fff;
   border: none;
   padding: 0.6rem 1rem;
   border-radius: 8px;
-  font-size: 1rem;
-  transition: background-color 0.2s;
-  margin-top: 0.5rem;
+  cursor: pointer;
+  margin-top: 0.6rem;
+  transition: background-color 0.2s ease;
 }
+button:hover { background-color: #2563eb; }
 
-button:hover {
-  background-color: #2563eb;
-}
-
-/* =========================
-   Pools & Output
-   ========================= */
-pre {
-  background: #f1f5f9;
-  padding: 1rem;
-  border-radius: 8px;
-  overflow-x: auto;
-  margin-top: 0.8rem;
-  font-size: 0.95rem;
-  color: #1e293b;
-}
-
-/* =========================
-   Refresh Section
-   ========================= */
-.refresh-section {
-  text-align: center;
-  margin-bottom: 0.8rem;
-}
-
-#last-updated {
-  font-size: 0.85rem;
-  color: #64748b;
-  margin-top: 0.3rem;
-}
-
-/* =========================
-   Footer
-   ========================= */
+/* Footer */
 footer {
   background: #1e293b;
   color: #cbd5e1;
@@ -152,3 +89,5 @@ footer {
   font-size: 0.9rem;
   border-top: 4px solid #3b82f6;
 }
+.refresh-section { margin-bottom: 0.6rem; }
+pre { background: #f1f5f9; padding: 1rem; border-radius: 8px; overflow-x: auto; }

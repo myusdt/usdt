@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>MYUSDT Dashboard — Bridge</title>
   <link rel="stylesheet" href="styles.css">
+
+  <script src="https://cdn.jsdelivr.net/npm/web3@1.9.0/dist/web3.min.js"></script>
+  <script src="https://cdn.ethers.io/lib/ethers-5.7.umd.min.js"></script>
 </head>
 <body>
   <header>
@@ -29,18 +32,13 @@
     <div class="refresh-section">
       <p id="last-updated">Last updated: --</p>
     </div>
-    <p>Powered by ethers.js | MYUSDT Multi-Chain Dashboard</p>
+    <p>Powered by Web3.js & ethers.js | MYUSDT Multi-Chain Dashboard</p>
   </footer>
 
-  <!-- Load ethers.js -->
-  <script src="https://cdn.ethers.io/lib/ethers-5.7.umd.min.js"></script>
-  <!-- Load app.js -->
   <script src="app.js"></script>
 
   <script>
     const lastUpdated = document.getElementById("last-updated");
-
-    // Refresh bridge status
     document.getElementById("refreshBridge").addEventListener("click", async () => {
       if (typeof loadBridgeStatus === "function") {
         await loadBridgeStatus();
