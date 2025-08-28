@@ -38,14 +38,12 @@
   <script src="app.js"></script>
 
   <script>
-    // =========================
-    // Bridge Page Refresh Hook
-    // =========================
     const lastUpdated = document.getElementById("last-updated");
 
+    // Refresh bridge status
     document.getElementById("refreshBridge").addEventListener("click", async () => {
       if (typeof loadBridgeStatus === "function") {
-        await loadBridgeStatus(); // load latest bridge transfer info
+        await loadBridgeStatus();
         lastUpdated.innerText = `Last updated: ${new Date().toLocaleString()}`;
       }
     });

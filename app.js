@@ -1,27 +1,35 @@
 // =============================
-// MYUSDT Dashboard Frontend Logic
+// MYUSDT Multi-Chain Dashboard Frontend
 // =============================
 
-// Using web3.js
+// -----------------------------
+// Imports
+// -----------------------------
 import Web3 from "web3";
-import { abi as UNISWAP_PAIR_ABI } from "./UniswapV2Pair.json";
-import { abi as ERC20_ABI } from "./ERC20.json";
 
-const web3 = new Web3(window.ethereum);
+// =============================
+// CONFIGURATION
+// =============================
 
-// 🔹 Router Addresses
+// RPC Endpoints
+const RPCS = {
+  sepolia: "https://sepolia.infura.io/v3/afc846803e384cc5837a4a260f693cd71",
+  bscTestnet: "https://data-seed-prebsc-1-s1.binance.org:8545/"
+};
+
+// Router Addresses
 const ROUTERS = {
-  sepolia: "0xeE567Fe1712Faf6149d80dA1E6934E354124CfE3",   // UniswapV2Router02
-  bscTestnet: "0x9Ac64Cc6e4415144C455BD8E4837Fea55603e5c3"  // PancakeV2Router02
+  sepolia: "0xeE567Fe1712Faf6149d80dA1E6934E354124CfE3",
+  bscTestnet: "0x9Ac64Cc6e4415144C455BD8E4837Fea55603e5c3"
 };
 
-// 🔹 Pair Addresses (replace after pool creation)
+// LP Pair Addresses
 const PAIRS = {
-  sepolia: "0xYOUR_SEPOLIA_PAIR_ADDRESS", // MYUSDT/ETH
-  bscTestnet: "0xYOUR_BSC_PAIR_ADDRESS"   // MYUSDT/BNB
+  sepolia: "0x6c3e4cb2e96b01f4b866965a91ed4437839a121a",
+  bscTestnet: "0xc15fa3e22c912a276550f3e5fe3b0deb87b55acd"
 };
 
-// 🔹 Token Addresses
+// Token Addresses
 const TOKENS = {
   sepolia: {
     MYUSDT: "0xc6C465b8E56757DB8dC54D7E11D0194182FEB475",
@@ -33,91 +41,143 @@ const TOKENS = {
   }
 };
 
+// Minimal ERC20 ABI
+const ERC20_ABI = [
+  "function name() view returns (string)",
+  "function symbol() view returns (string)",
+  "function decimals() view returns (uint8)",
+  "function totalSupply() view returns (uint256)",
+  "function balanceOf(address) view returns (uint256)"
+];
+
+// Minimal LP Pair ABI
+const LP_ABI = [
+  "function getReserves() view returns (uint112 reserve0, uint112 reserve1, uint32 blockTimestampLast)",
+  "function token0() view returns (address)",
+  "function token1() view returns (address)"
+];
+
+// Bridge ABI (example: ERC20 transfer events)
+const BRIDGE_ABI = [
+  "event Transfer(address indexed from, address indexed to, uint256 value)"
+];
+
 // =============================
-// Wallet Connection
+// WEB3 PROVIDERS
 // =============================
+const web3Instances = {
+  sepolia: new Web3(RPCS.sepolia),
+  bscTestnet: new Web3(RPCS.bscTestnet)
+};
+
+// =============================
+// UTILITY FUNCTIONS
+// =============================
+function formatBalance(balance, decimals = 18) {
+  return Number(balance) / 10 ** decimals;
+}
+
+// =============================
+// DASHBOARD FUNCTIONS
+// =============================
+
+// Connect user's wallet
 async function connectWallet() {
+  if (!window.ethereum) {
+    alert("MetaMask not detected! Please install it.");
+    return;
+  }
+  const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
+  const walletAddress = accounts[0];
+  const addressEl = document.getElementById("userAddress");
+  if (addressEl) addressEl.innerText = walletAddress;
+  return walletAddress;
+}
+
+// Load token balances and total supply
+async function loadTokenData(chain) {
   try {
-    const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
-    const wallet = accounts[0];
-    document.getElementById("userAddress")?.innerText = wallet;
-    console.log("Connected wallet:", wallet);
-    return wallet;
+    const provider = web3Instances[chain];
+    const tokenContract = new provider.eth.Contract(ERC20_ABI, TOKENS[chain].MYUSDT);
+    const totalSupply = await tokenContract.methods.totalSupply().call();
+
+    const el = document.getElementById(`supply-${chain}`);
+    if (el) el.innerText = formatBalance(totalSupply);
   } catch (err) {
-    console.error("Wallet connection failed:", err);
+    console.error(`Error loading token data for ${chain}:`, err);
   }
 }
 
-// =============================
-// Load LP Data
-// =============================
-async function loadLP(chain) {
+// Load LP reserves
+async function loadLPData(chain) {
   try {
-    const pairAddress = PAIRS[chain];
-    if (!pairAddress || pairAddress.includes("YOUR")) {
-      console.warn(`Pair address for ${chain} not set yet.`);
-      document.getElementById(chain === "sepolia" ? "uniReserves" : "pancakeReserves").innerText =
-        "Pair not created yet.";
-      return;
+    const provider = web3Instances[chain];
+    const pairContract = new provider.eth.Contract(LP_ABI, PAIRS[chain]);
+    const reserves = await pairContract.methods.getReserves().call();
+    const token0 = await pairContract.methods.token0().call();
+    const token1 = await pairContract.methods.token1().call();
+
+    const el = document.getElementById(`lp-${chain}`);
+    if (el) {
+      el.innerText = `Token0: ${token0}\nToken1: ${token1}\nReserves: ${reserves.reserve0} / ${reserves.reserve1}`;
     }
-
-    const pairContract = new web3.eth.Contract(UNISWAP_PAIR_ABI, pairAddress);
-    const [token0, token1, reserves] = await Promise.all([
-      pairContract.methods.token0().call(),
-      pairContract.methods.token1().call(),
-      pairContract.methods.getReserves().call()
-    ]);
-
-    const display = `Token0: ${token0}\nToken1: ${token1}\nReserve0: ${reserves._reserve0}\nReserve1: ${reserves._reserve1}`;
-    document.getElementById(chain === "sepolia" ? "uniReserves" : "pancakeReserves").innerText = display;
-    console.log(`LP ${chain}:`, display);
   } catch (err) {
-    console.error(`Error loading LP for ${chain}:`, err);
+    console.error(`Error loading LP data for ${chain}:`, err);
+    const el = document.getElementById(`lp-${chain}`);
+    if (el) el.innerText = "LP tracking failed or pool not created.";
   }
 }
 
-// =============================
-// Bridge Status Loader
-// =============================
+// Load latest bridge transfers
 async function loadBridgeStatus() {
   try {
-    // 🔹 Replace with actual bridge contract events / logs if available
-    // For demo, we’ll simulate the latest transfer
-    const latestTransfer = {
-      from: "0xFromAddress...",
-      to: "0xToAddress...",
-      amount: "100 MYUSDT",
-      chain: "Sepolia → BSC Testnet",
-      timestamp: new Date().toLocaleString()
-    };
-    document.getElementById("bridgeStatus").innerText = JSON.stringify(latestTransfer, null, 2);
+    const providerSepolia = web3Instances.sepolia;
+    const providerBsc = web3Instances.bscTestnet;
+
+    const bridgeSepolia = new providerSepolia.eth.Contract(BRIDGE_ABI, TOKENS.sepolia.MYUSDT);
+    const bridgeBsc = new providerBsc.eth.Contract(BRIDGE_ABI, TOKENS.bscTestnet.MYUSDT);
+
+    const eventsSepolia = await bridgeSepolia.getPastEvents("Transfer", { fromBlock: 0, toBlock: "latest" });
+    const eventsBsc = await bridgeBsc.getPastEvents("Transfer", { fromBlock: 0, toBlock: "latest" });
+
+    const lastEventSepolia = eventsSepolia[eventsSepolia.length - 1];
+    const lastEventBsc = eventsBsc[eventsBsc.length - 1];
+
+    const statusEl = document.getElementById("bridgeStatus");
+    if (statusEl) {
+      statusEl.innerText = `
+Sepolia Last Transfer:
+From: ${lastEventSepolia?.returnValues?.from || "--"}
+To: ${lastEventSepolia?.returnValues?.to || "--"}
+Value: ${formatBalance(lastEventSepolia?.returnValues?.value || 0)}
+
+BSC Last Transfer:
+From: ${lastEventBsc?.returnValues?.from || "--"}
+To: ${lastEventBsc?.returnValues?.to || "--"}
+Value: ${formatBalance(lastEventBsc?.returnValues?.value || 0)}
+      `;
+    }
   } catch (err) {
     console.error("Error loading bridge status:", err);
-    document.getElementById("bridgeStatus").innerText = "Error fetching bridge status.";
+    const statusEl = document.getElementById("bridgeStatus");
+    if (statusEl) statusEl.innerText = "Failed to load bridge status.";
   }
 }
 
 // =============================
-// Refresh Handlers
-// =============================
-document.getElementById("refresh-btn")?.addEventListener("click", async () => {
-  await loadLP("sepolia");
-  await loadLP("bscTestnet");
-  await loadBridgeStatus();
-  document.getElementById("last-updated").innerText = `Last updated: ${new Date().toLocaleString()}`;
-});
-
-document.getElementById("refreshBridge")?.addEventListener("click", async () => {
-  await loadBridgeStatus();
-  document.getElementById("last-updated").innerText = `Last updated: ${new Date().toLocaleString()}`;
-});
-
-// =============================
-// On Page Load
+// INITIALIZE DASHBOARD
 // =============================
 window.addEventListener("load", async () => {
   await connectWallet();
-  await loadLP("sepolia");
-  await loadLP("bscTestnet");
-  await loadBridgeStatus();
+
+  // Token and LP data
+  await loadTokenData("sepolia");
+  await loadTokenData("bscTestnet");
+  await loadLPData("sepolia");
+  await loadLPData("bscTestnet");
+
+  // Bridge status
+  if (document.getElementById("bridgeStatus")) {
+    await loadBridgeStatus();
+  }
 });

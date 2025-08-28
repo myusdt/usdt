@@ -6,7 +6,6 @@
   <title>MYUSDT Dashboard</title>
   <link rel="stylesheet" href="styles.css">
 </head>
-
 <body>
   <header>
     <h1>MYUSDT Multi-Chain Dashboard</h1>
@@ -22,14 +21,15 @@
     <section class="card">
       <h2>Token Overview</h2>
       <p><strong>Symbol:</strong> MYUSDT</p>
-      <p><strong>Total Supply:</strong> <span id="totalSupply">Loading...</span></p>
+      <p><strong>Total Supply:</strong> <span id="supply-sepolia">Loading...</span> (Sepolia)</p>
+      <p><strong>Total Supply:</strong> <span id="supply-bscTestnet">Loading...</span> (BSC Testnet)</p>
       <p><strong>Decimals:</strong> 18</p>
     </section>
 
     <!-- Wallet Info Card -->
     <section class="card">
       <h2>Your Wallet</h2>
-      <p><strong>Address:</strong> <span id="walletAddress">Not connected</span></p>
+      <p><strong>Address:</strong> <span id="userAddress">Not connected</span></p>
       <p><strong>Balance:</strong> <span id="userBalance">Loading...</span></p>
       <button id="connectBtn">🔗 Connect Wallet</button>
     </section>
@@ -46,14 +46,56 @@
   <footer>
     <div class="refresh-section">
       <button id="refresh-btn">🔄 Refresh Now</button>
-      <p id="last-updated"></p>
+      <p id="last-updated">Last updated: --</p>
     </div>
     <p>Powered by ethers.js | MYUSDT Multi-Chain Dashboard</p>
   </footer>
 
-  <!-- Load ethers.js from CDN -->
+  <!-- Load ethers.js -->
   <script src="https://cdn.ethers.io/lib/ethers-5.7.umd.min.js"></script>
   <!-- Load app.js -->
   <script type="module" src="app.js"></script>
+
+  <script>
+    // =========================
+    // Dashboard Button Hooks
+    // =========================
+    const lastUpdated = document.getElementById("last-updated");
+
+    // Connect wallet button
+    document.getElementById("connectBtn").addEventListener("click", async () => {
+      if (typeof connectWallet === "function") {
+        await connectWallet();
+        lastUpdated.innerText = `Last updated: ${new Date().toLocaleString()}`;
+      }
+    });
+
+    // Load Sepolia Pool info
+    document.getElementById("loadSepoliaPair").addEventListener("click", async () => {
+      if (typeof loadLPData === "function") {
+        await loadLPData("sepolia");
+        lastUpdated.innerText = `Last updated: ${new Date().toLocaleString()}`;
+      }
+    });
+
+    // Load BSC Pool info
+    document.getElementById("loadBscPair").addEventListener("click", async () => {
+      if (typeof loadLPData === "function") {
+        await loadLPData("bscTestnet");
+        lastUpdated.innerText = `Last updated: ${new Date().toLocaleString()}`;
+      }
+    });
+
+    // Global Refresh button
+    document.getElementById("refresh-btn").addEventListener("click", async () => {
+      if (typeof loadTokenData === "function" && typeof loadLPData === "function") {
+        await loadTokenData("sepolia");
+        await loadTokenData("bscTestnet");
+        await loadLPData("sepolia");
+        await loadLPData("bscTestnet");
+        lastUpdated.innerText = `Last updated: ${new Date().toLocaleString()}`;
+      }
+    });
+  </script>
 </body>
 </html>
