@@ -51,60 +51,77 @@ async function connectWallet(){
 }
 
 // Load Token Data
-async function loadTokenData(chain){
-  try{
-    const provider = web3Instances[chain];
-    const tokenContract = new provider.eth.Contract(ERC20_ABI, TOKENS[chain].MYUSDT);
-    const supply = await tokenContract.methods.totalSupply().call();
-    const el = document.getElementById("totalSupply");
-    if(el) el.innerText = formatBalance(supply);
-  }catch(err){ console.error(err); }
+async function loadTokenData() {
+  try {
+    const web3 = new Web3(window.ethereum);
+    const accounts = await web3.eth.getAccounts();
+    const userAddress = accounts[0];
+
+    // Sepolia token
+    const sepoliaToken = new web3.eth.Contract(ERC20_ABI, TOKENS.sepolia.MYUSDT);
+    const sepoSupply = await sepoliaToken.methods.totalSupply().call();
+    const sepoBalance = await sepoliaToken.methods.balanceOf(userAddress).call();
+
+    document.getElementById("totalSupply").innerText = formatBalance(sepoSupply);
+    document.getElementById("userBalance").innerText = formatBalance(sepoBalance);
+  } catch (err) { console.error(err); }
 }
 
+
 // Load LP Data
-async function loadLPData(chain){
-  try{
-    const provider = web3Instances[chain];
-    const pairContract = new provider.eth.Contract(LP_ABI, PAIRS[chain]);
+async function loadLPData(chain) {
+  try {
+    const web3 = new Web3(window.ethereum);
+    const pairAddress = PAIRS[chain];
+    const pairContract = new web3.eth.Contract(LP_ABI, pairAddress);
     const reserves = await pairContract.methods.getReserves().call();
     const token0 = await pairContract.methods.token0().call();
     const token1 = await pairContract.methods.token1().call();
-    const el = document.getElementById("pairInfo") || document.getElementById(chain==="sepolia"?"uniReserves":"pancakeReserves");
-    if(el) el.innerText = `Token0: ${token0}\nToken1: ${token1}\nReserves: ${reserves.reserve0} / ${reserves.reserve1}`;
-  }catch(err){
+
+    document.getElementById("pairInfo").innerText = `Token0: ${token0}\nToken1: ${token1}\nReserves: ${reserves.reserve0} / ${reserves.reserve1}`;
+  } catch (err) {
     console.error(err);
-    const el = document.getElementById("pairInfo") || document.getElementById(chain==="sepolia"?"uniReserves":"pancakeReserves");
-    if(el) el.innerText = "Failed to load LP data.";
+    document.getElementById("pairInfo").innerText = "Failed to load LP data";
   }
 }
 
+
 // Load Bridge Status
-async function loadBridgeStatus(){
-  try{
-    const providerSepolia = web3Instances.sepolia;
-    const providerBsc = web3Instances.bscTestnet;
-    const bridgeSepolia = new providerSepolia.eth.Contract(BRIDGE_ABI, TOKENS.sepolia.MYUSDT);
-    const bridgeBsc = new providerBsc.eth.Contract(BRIDGE_ABI, TOKENS.bscTestnet.MYUSDT);
-    const eventsSepolia = await bridgeSepolia.getPastEvents("Transfer",{fromBlock:0,toBlock:"latest"});
-    const eventsBsc = await bridgeBsc.getPastEvents("Transfer",{fromBlock:0,toBlock:"latest"});
-    const lastSepolia = eventsSepolia[eventsSepolia.length-1];
-    const lastBsc = eventsBsc[eventsBsc.length-1];
-    const el = document.getElementById("bridgeStatus");
-    if(el){
-      el.innerText = `
+async function loadBridgeStatus() {
+  try {
+    const web3 = new Web3(window.ethereum);
+
+    // Sepolia
+    const bridgeSepolia = new web3.eth.Contract(BRIDGE_ABI, TOKENS.sepolia.MYUSDT);
+    const eventsSepolia = await bridgeSepolia.getPastEvents("Transfer", { fromBlock: 0, toBlock: "latest" });
+    const lastSepolia = eventsSepolia[eventsSepolia.length - 1];
+
+    // BSC Testnet
+    const bridgeBsc = new web3.eth.Contract(BRIDGE_ABI, TOKENS.bscTestnet.MYUSDT);
+    const eventsBsc = await bridgeBsc.getPastEvents("Transfer", { fromBlock: 0, toBlock: "latest" });
+    const lastBsc = eventsBsc[eventsBsc.length - 1];
+
+    const statusEl = document.getElementById("bridgeStatus");
+    if (statusEl) {
+      statusEl.innerText = `
 Sepolia Last Transfer:
-From: ${lastSepolia?.returnValues?.from||"--"}
-To: ${lastSepolia?.returnValues?.to||"--"}
-Value: ${formatBalance(lastSepolia?.returnValues?.value||0)}
+From: ${lastSepolia?.returnValues?.from || "--"}
+To: ${lastSepolia?.returnValues?.to || "--"}
+Value: ${formatBalance(lastSepolia?.returnValues?.value || 0)}
 
 BSC Last Transfer:
-From: ${lastBsc?.returnValues?.from||"--"}
-To: ${lastBsc?.returnValues?.to||"--"}
-Value: ${formatBalance(lastBsc?.returnValues?.value||0)}
+From: ${lastBsc?.returnValues?.from || "--"}
+To: ${lastBsc?.returnValues?.to || "--"}
+Value: ${formatBalance(lastBsc?.returnValues?.value || 0)}
       `;
     }
-  }catch(err){ console.error(err); const el=document.getElementById("bridgeStatus"); if(el) el.innerText="Failed to load bridge status."; }
+  } catch (err) {
+    console.error("Error loading bridge status:", err);
+    const statusEl = document.getElementById("bridgeStatus");
+    if (statusEl) statusEl.innerText = "Failed to load bridge status.";
+  }
 }
+
 
 // INITIALIZE
 window.addEventListener("load", async ()=>{
