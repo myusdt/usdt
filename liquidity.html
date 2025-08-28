@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Token Dashboard — Liquidity</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header>
+    <h1>MYUSDT Liquidity Pools</h1>
+    <nav>
+      <a href="index.html">Home</a> |
+      <a href="liquidity.html">Liquidity</a> |
+      <a href="bridge.html">Bridge</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="card">
+      <h2>Uniswap (SepoliaETH)</h2>
+      <p><strong>LP Reserves:</strong> <span id="uniReserves">Loading...</span></p>
+    </section>
+
+    <section class="card">
+      <h2>PancakeSwap (BSC Testnet)</h2>
+      <p><strong>LP Reserves:</strong> <span id="pancakeReserves">Loading...</span></p>
+    </section>
+  </main>
+
+  <footer>
+    <p>Powered by ethers.js | MYUSDT Multi-Chain Dashboard</p>
+  </footer>
+
+  <script src="https://cdn.ethers.io/lib/ethers-5.7.umd.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

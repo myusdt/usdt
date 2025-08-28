@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Token Dashboard — Home</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header>
+    <h1>MYUSDT Multi-Chain Dashboard</h1>
+    <nav>
+      <a href="index.html">Home</a> |
+      <a href="liquidity.html">Liquidity</a> |
+      <a href="bridge.html">Bridge</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="card">
+      <h2>Token Overview</h2>
+      <p><strong>Symbol:</strong> MYUSDT</p>
+      <p><strong>Total Supply:</strong> <span id="totalSupply">Loading...</span></p>
+      <p><strong>Decimals:</strong> 18</p>
+    </section>
+
+    <section class="card">
+      <h2>Your Wallet</h2>
+      <p><strong>Address:</strong> <span id="userAddress">Not connected</span></p>
+      <p><strong>Balance:</strong> <span id="userBalance">Loading...</span></p>
+    </section>
+  </main>
+
+  <footer>
+    <div class="refresh-section">
+  <button id="refresh-btn">🔄 Refresh Now</button>
+  <p id="last-updated"></p>
+</div>
+
+    <p>Powered by ethers.js | MYUSDT Multi-Chain Dashboard</p>
+  </footer>
+
+  <!-- Load ethers.js -->
+  <script src="https://cdn.ethers.io/lib/ethers-5.7.umd.min.js"></script>
+  <!-- Load app.js -->
+  <script src="app.js"></script>
+</body>
+</html>
