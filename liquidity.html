@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Token Dashboard — Liquidity</title>
+  <title>MYUSDT Dashboard — Liquidity Pools</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -19,20 +19,50 @@
   <main>
     <section class="card">
       <h2>Uniswap (SepoliaETH)</h2>
-      <p><strong>LP Reserves:</strong> <span id="uniReserves">Loading...</span></p>
+      <p><strong>LP Reserves:</strong></p>
+      <pre id="uniReserves">Loading...</pre>
+      <button id="refreshUni">🔄 Refresh Uniswap</button>
     </section>
 
     <section class="card">
       <h2>PancakeSwap (BSC Testnet)</h2>
-      <p><strong>LP Reserves:</strong> <span id="pancakeReserves">Loading...</span></p>
+      <p><strong>LP Reserves:</strong></p>
+      <pre id="pancakeReserves">Loading...</pre>
+      <button id="refreshPancake">🔄 Refresh PancakeSwap</button>
     </section>
   </main>
 
   <footer>
+    <div class="refresh-section">
+      <p id="last-updated">Last updated: --</p>
+    </div>
     <p>Powered by ethers.js | MYUSDT Multi-Chain Dashboard</p>
   </footer>
 
+  <!-- Load ethers.js -->
   <script src="https://cdn.ethers.io/lib/ethers-5.7.umd.min.js"></script>
+  <!-- Load app.js -->
   <script src="app.js"></script>
+
+  <script>
+    // =========================
+    // Liquidity Page Button Hooks
+    // =========================
+    const lastUpdated = document.getElementById("last-updated");
+
+    document.getElementById("refreshUni").addEventListener("click", async () => {
+      if (typeof loadLPData === "function") {
+        await loadLPData(); // reload LP reserves
+        lastUpdated.innerText = `Last updated: ${new Date().toLocaleString()}`;
+      }
+    });
+
+    document.getElementById("refreshPancake").addEventListener("click", async () => {
+      if (typeof loadLPData === "function") {
+        await loadLPData(); // reload LP reserves
+        lastUpdated.innerText = `Last updated: ${new Date().toLocaleString()}`;
+      }
+    });
+  </script>
 </body>
 </html>

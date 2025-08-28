@@ -3,9 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Token Dashboard — Home</title>
+  <title>MYUSDT Dashboard</title>
   <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
   <header>
     <h1>MYUSDT Multi-Chain Dashboard</h1>
@@ -17,6 +18,7 @@
   </header>
 
   <main>
+    <!-- Token Overview Card -->
     <section class="card">
       <h2>Token Overview</h2>
       <p><strong>Symbol:</strong> MYUSDT</p>
@@ -24,25 +26,34 @@
       <p><strong>Decimals:</strong> 18</p>
     </section>
 
+    <!-- Wallet Info Card -->
     <section class="card">
       <h2>Your Wallet</h2>
-      <p><strong>Address:</strong> <span id="userAddress">Not connected</span></p>
+      <p><strong>Address:</strong> <span id="walletAddress">Not connected</span></p>
       <p><strong>Balance:</strong> <span id="userBalance">Loading...</span></p>
+      <button id="connectBtn">🔗 Connect Wallet</button>
+    </section>
+
+    <!-- Liquidity Pool Interaction Card -->
+    <section class="card">
+      <h2>Liquidity Pools</h2>
+      <button id="loadSepoliaPair">Load Sepolia MYUSDT/ETH Pool</button>
+      <button id="loadBscPair">Load BSC Testnet MYUSDT/BNB Pool</button>
+      <pre id="pairInfo">Pool info will appear here...</pre>
     </section>
   </main>
 
   <footer>
     <div class="refresh-section">
-  <button id="refresh-btn">🔄 Refresh Now</button>
-  <p id="last-updated"></p>
-</div>
-
+      <button id="refresh-btn">🔄 Refresh Now</button>
+      <p id="last-updated"></p>
+    </div>
     <p>Powered by ethers.js | MYUSDT Multi-Chain Dashboard</p>
   </footer>
 
-  <!-- Load ethers.js -->
+  <!-- Load ethers.js from CDN -->
   <script src="https://cdn.ethers.io/lib/ethers-5.7.umd.min.js"></script>
   <!-- Load app.js -->
-  <script src="app.js"></script>
+  <script type="module" src="app.js"></script>
 </body>
 </html>

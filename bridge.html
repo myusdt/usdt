@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Token Dashboard — Bridge</title>
+  <title>MYUSDT Dashboard — Bridge</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -19,15 +19,36 @@
   <main>
     <section class="card">
       <h2>Bridge Status</h2>
-      <p><strong>Latest Transfer:</strong> <span id="bridgeStatus">Loading...</span></p>
+      <p><strong>Latest Transfer:</strong></p>
+      <pre id="bridgeStatus">Loading...</pre>
+      <button id="refreshBridge">🔄 Refresh Bridge Status</button>
     </section>
   </main>
 
   <footer>
+    <div class="refresh-section">
+      <p id="last-updated">Last updated: --</p>
+    </div>
     <p>Powered by ethers.js | MYUSDT Multi-Chain Dashboard</p>
   </footer>
 
+  <!-- Load ethers.js -->
   <script src="https://cdn.ethers.io/lib/ethers-5.7.umd.min.js"></script>
+  <!-- Load app.js -->
   <script src="app.js"></script>
+
+  <script>
+    // =========================
+    // Bridge Page Refresh Hook
+    // =========================
+    const lastUpdated = document.getElementById("last-updated");
+
+    document.getElementById("refreshBridge").addEventListener("click", async () => {
+      if (typeof loadBridgeStatus === "function") {
+        await loadBridgeStatus(); // load latest bridge transfer info
+        lastUpdated.innerText = `Last updated: ${new Date().toLocaleString()}`;
+      }
+    });
+  </script>
 </body>
 </html>
