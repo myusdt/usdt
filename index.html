@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MYUSDT Dashboard</title>
+  <link rel="stylesheet" href="style.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+  <script defer src="app.js"></script>
+</head>
+<body>
+  <header>
+    <h1>MYUSDT Dashboard</h1>
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="liquidity.html">Liquidity</a>
+      <a href="bridge.html">Bridge</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="card">
+      <h2>Token Supply</h2>
+      <p>Sepolia Supply: <span id="supply-sepolia">Loading...</span></p>
+      <p>BSC Testnet Supply: <span id="supply-bsc">Loading...</span></p>
+    </section>
+
+    <section class="card">
+      <h2>Vault Balances</h2>
+      <p>Sepolia Vault: <span id="vault-sepolia">Loading...</span></p>
+      <p>BSC Vault: <span id="vault-bsc">Loading...</span></p>
+    </section>
+  </main>
+
+  <footer>
+    <p>Powered by ethers.js | MYUSDT Multi-Chain Dashboard</p>
+  </footer>
+</body>
+</html>
