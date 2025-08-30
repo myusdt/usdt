@@ -36,8 +36,13 @@ const LP_ABI = [
 ];
 
 // UTILITY
-function formatBalance(balance, decimals=18){ 
-  return (Number(balance)/10**decimals).toFixed(4); 
+function formatBalance(balance, decimals = 18) {
+  if (!balance) return "0";
+  const bn = ethers.BigNumber.from(balance.toString());
+  const divisor = ethers.BigNumber.from(10).pow(decimals);
+  const whole = bn.div(divisor).toString();
+  const fraction = bn.mod(divisor).toString().padStart(decimals, "0").slice(0, 4);
+  return `${whole}.${fraction}`;
 }
 
 // -----------------------------
@@ -107,8 +112,8 @@ async function loadBridgeStatus() {
     const locker = new ethers.Contract(BRIDGE.locker, ERC20_ABI, providerSepolia);
     const minter = new ethers.Contract(BRIDGE.minter, ERC20_ABI, providerBsc);
 
-    const sepoEvents = await locker.queryFilter("Transfer", -5000);
-    const bscEvents = await minter.queryFilter("Transfer", -5000);
+    const sepoEvents = await locker.queryFilter("Transfer", 0, "latest");
+    const bscEvents = await minter.queryFilter("Transfer", 0, "latest");
 
     const lastSepo = sepoEvents[sepoEvents.length-1];
     const lastBsc = bscEvents[bscEvents.length-1];
@@ -122,6 +127,8 @@ async function loadBridgeStatus() {
     if(statusEl) statusEl.innerText = text;
   } catch (err) {
     console.error("Bridge error:", err);
+    console.log("Sepolia events:", sepoEvents);
+    console.log("BSC events:", bscEvents);
   }
 }
 
