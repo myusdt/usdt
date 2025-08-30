@@ -5,9 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>MYUSDT Dashboard — Bridge</title>
   <link rel="stylesheet" href="styles.css">
-
   <script src="https://cdn.jsdelivr.net/npm/web3@1.9.0/dist/web3.min.js"></script>
-  <script src="https://cdn.ethers.io/lib/ethers-5.7.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
 </head>
 <body>
   <header>
@@ -22,8 +21,7 @@
   <main>
     <section class="card">
       <h2>Bridge Status</h2>
-      <p><strong>Latest Transfer:</strong></p>
-      <pre id="bridgeStatus">Loading...</pre>
+      <div id="bridgeStatus" class="event-log">Loading...</div>
       <button id="refreshBridge">🔄 Refresh Bridge Status</button>
     </section>
   </main>
@@ -36,15 +34,5 @@
   </footer>
 
   <script src="app.js"></script>
-
-  <script>
-    const lastUpdated = document.getElementById("last-updated");
-    document.getElementById("refreshBridge").addEventListener("click", async () => {
-      if (typeof loadBridgeStatus === "function") {
-        await loadBridgeStatus();
-        lastUpdated.innerText = `Last updated: ${new Date().toLocaleString()}`;
-      }
-    });
-  </script>
 </body>
 </html>

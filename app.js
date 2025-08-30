@@ -9,8 +9,8 @@ const RPCS = {
 };
 
 const PAIRS = {
-  sepolia: "0x6c3e4cb2e96b01f4b866965a91ed4437839a121a",
-  bscTestnet: "0xc15fa3e22c912a276550f3e5fe3b0deb87b55acd"
+  sepolia: "0x64be8fb20f5e6217D4D7B90ddca515F96B3A86fe",
+  bscTestnet: "0x0c39D41371D397d8172024c097c0B69E88788160"
 };
 
 const TOKENS = {
@@ -18,9 +18,15 @@ const TOKENS = {
   bscTestnet: { MYUSDT: "0x1c7e5094413Be138C1561D05c2Be92364d74b5b2" }
 };
 
+const BRIDGE = {
+  locker: "0xe5b80EF9bCb9F98E79A8490D51424797BD882b26", // Sepolia
+  minter: "0x0052338C058D1D29690ecf90f56f5cCc45E250be"  // BSC Testnet
+};
+
 const ERC20_ABI = [
   "function totalSupply() view returns (uint256)",
-  "function balanceOf(address) view returns (uint256)"
+  "function balanceOf(address) view returns (uint256)",
+  "event Transfer(address indexed from,address indexed to,uint256 value)"
 ];
 
 const LP_ABI = [
@@ -29,116 +35,142 @@ const LP_ABI = [
   "function token1() view returns (address)"
 ];
 
-const BRIDGE_ABI = [
-  "event Transfer(address indexed from,address indexed to,uint256 value)"
-];
-
-// WEB3 PROVIDERS
-const web3Instances = {
-  sepolia: new Web3(RPCS.sepolia),
-  bscTestnet: new Web3(RPCS.bscTestnet)
-};
-
 // UTILITY
-function formatBalance(balance, decimals=18){ return Number(balance)/10**decimals; }
-
-// Connect Wallet
-async function connectWallet(){
-  if (window.ethereum) {
-  const web3 = new Web3(window.ethereum);
-} else {
-  alert("MetaMask is required!");
+function formatBalance(balance, decimals=18){ 
+  return (Number(balance)/10**decimals).toFixed(4); 
 }
 
-// Load Token Data
-async function loadTokenData() {
+// -----------------------------
+// WALLET CONNECTION
+// -----------------------------
+async function connectWallet(){
+  if (!window.ethereum) {
+    alert("MetaMask is required!");
+    return;
+  }
+  const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+  const userAddress = accounts[0];
+  document.getElementById("walletAddress").innerText = userAddress;
+  return userAddress;
+}
+
+// -----------------------------
+// LOAD TOKEN DATA
+// -----------------------------
+async function loadTokenData(chain="sepolia") {
   try {
-    const web3 = new Web3(window.ethereum);
-    const accounts = await web3.eth.getAccounts();
-    const userAddress = accounts[0];
+    const provider = new ethers.providers.JsonRpcProvider(RPCS[chain]);
+    const token = new ethers.Contract(TOKENS[chain].MYUSDT, ERC20_ABI, provider);
 
-    // Sepolia token
-    const sepoliaToken = new web3.eth.Contract(ERC20_ABI, TOKENS.sepolia.MYUSDT);
-    const sepoSupply = await sepoliaToken.methods.totalSupply().call();
-    const sepoBalance = await sepoliaToken.methods.balanceOf(userAddress).call();
+    const supply = await token.totalSupply();
+    const totalSupplyEl = document.getElementById("totalSupply");
+    if(totalSupplyEl) totalSupplyEl.innerText = formatBalance(supply);
 
-    document.getElementById("totalSupply").innerText = formatBalance(sepoSupply);
-    document.getElementById("userBalance").innerText = formatBalance(sepoBalance);
+    if(window.ethereum) {
+      const userProvider = new ethers.providers.Web3Provider(window.ethereum);
+      const signer = userProvider.getSigner();
+      const user = await signer.getAddress();
+      const bal = await token.balanceOf(user);
+      const userBalanceEl = document.getElementById("userBalance");
+      if(userBalanceEl) userBalanceEl.innerText = formatBalance(bal);
+    }
   } catch (err) { console.error(err); }
 }
 
-
-// Load LP Data
+// -----------------------------
+// LOAD LP DATA
+// -----------------------------
 async function loadLPData(chain) {
   try {
-    const web3 = new Web3(window.ethereum);
-    const pairAddress = PAIRS[chain];
-    const pairContract = new web3.eth.Contract(LP_ABI, pairAddress);
-    const reserves = await pairContract.methods.getReserves().call();
-    const token0 = await pairContract.methods.token0().call();
-    const token1 = await pairContract.methods.token1().call();
+    const provider = new ethers.providers.JsonRpcProvider(RPCS[chain]);
+    const pair = new ethers.Contract(PAIRS[chain], LP_ABI, provider);
+    const reserves = await pair.getReserves();
+    const token0 = await pair.token0();
+    const token1 = await pair.token1();
 
-    document.getElementById("pairInfo").innerText = `Token0: ${token0}\nToken1: ${token1}\nReserves: ${reserves.reserve0} / ${reserves.reserve1}`;
+    const text = `Token0: ${token0}\nToken1: ${token1}\nReserves: ${reserves[0]} / ${reserves[1]}`;
+    if(chain === "sepolia") document.getElementById("uniReserves").innerText = text;
+    if(chain === "bscTestnet") document.getElementById("pancakeReserves").innerText = text;
   } catch (err) {
     console.error(err);
-    document.getElementById("pairInfo").innerText = "Failed to load LP data";
   }
 }
 
-
-// Load Bridge Status
+// -----------------------------
+// LOAD BRIDGE EVENTS
+// -----------------------------
 async function loadBridgeStatus() {
   try {
-    const web3 = new Web3(window.ethereum);
+    const providerSepolia = new ethers.providers.JsonRpcProvider(RPCS.sepolia);
+    const providerBsc = new ethers.providers.JsonRpcProvider(RPCS.bscTestnet);
 
-    // Sepolia
-    const bridgeSepolia = new web3.eth.Contract(BRIDGE_ABI, TOKENS.sepolia.MYUSDT);
-    const eventsSepolia = await bridgeSepolia.getPastEvents("Transfer", { fromBlock: 0, toBlock: "latest" });
-    const lastSepolia = eventsSepolia[eventsSepolia.length - 1];
+    const locker = new ethers.Contract(BRIDGE.locker, ERC20_ABI, providerSepolia);
+    const minter = new ethers.Contract(BRIDGE.minter, ERC20_ABI, providerBsc);
 
-    // BSC Testnet
-    const bridgeBsc = new web3.eth.Contract(BRIDGE_ABI, TOKENS.bscTestnet.MYUSDT);
-    const eventsBsc = await bridgeBsc.getPastEvents("Transfer", { fromBlock: 0, toBlock: "latest" });
-    const lastBsc = eventsBsc[eventsBsc.length - 1];
+    const sepoEvents = await locker.queryFilter("Transfer", -5000);
+    const bscEvents = await minter.queryFilter("Transfer", -5000);
+
+    const lastSepo = sepoEvents[sepoEvents.length-1];
+    const lastBsc = bscEvents[bscEvents.length-1];
+
+    let text = "Sepolia Last Transfer:\n";
+    text += lastSepo ? `${lastSepo.args.from} → ${lastSepo.args.to}, ${formatBalance(lastSepo.args.value)}\n\n` : "None\n\n";
+    text += "BSC Testnet Last Transfer:\n";
+    text += lastBsc ? `${lastBsc.args.from} → ${lastBsc.args.to}, ${formatBalance(lastBsc.args.value)}\n` : "None";
 
     const statusEl = document.getElementById("bridgeStatus");
-    if (statusEl) {
-      statusEl.innerText = `
-Sepolia Last Transfer:
-From: ${lastSepolia?.returnValues?.from || "--"}
-To: ${lastSepolia?.returnValues?.to || "--"}
-Value: ${formatBalance(lastSepolia?.returnValues?.value || 0)}
-
-BSC Last Transfer:
-From: ${lastBsc?.returnValues?.from || "--"}
-To: ${lastBsc?.returnValues?.to || "--"}
-Value: ${formatBalance(lastBsc?.returnValues?.value || 0)}
-      `;
-    }
+    if(statusEl) statusEl.innerText = text;
   } catch (err) {
-    console.error("Error loading bridge status:", err);
-    const statusEl = document.getElementById("bridgeStatus");
-    if (statusEl) statusEl.innerText = "Failed to load bridge status.";
+    console.error("Bridge error:", err);
   }
 }
 
+// -----------------------------
+// AUTO + MANUAL REFRESH
+// -----------------------------
+function setupAutoRefresh(){
+  setInterval(()=>{
+    loadTokenData("sepolia");
+    loadTokenData("bscTestnet");
+    loadLPData("sepolia");
+    loadLPData("bscTestnet");
+    loadBridgeStatus();
+    const ts = document.getElementById("last-updated");
+    if(ts) ts.innerText = `Last updated: ${new Date().toLocaleString()}`;
+  }, 30000);
+}
 
+// -----------------------------
 // INITIALIZE
+// -----------------------------
 window.addEventListener("load", async ()=>{
-  await connectWallet();
+  const connectBtn = document.getElementById("connectBtn");
+  if(connectBtn) connectBtn.addEventListener("click", connectWallet);
+
+  const refreshBtn = document.getElementById("refresh-btn");
+  if(refreshBtn) refreshBtn.addEventListener("click", ()=>{
+    loadTokenData("sepolia");
+    loadTokenData("bscTestnet");
+    loadLPData("sepolia");
+    loadLPData("bscTestnet");
+    loadBridgeStatus();
+  });
+
+  const refreshUni = document.getElementById("refreshUni");
+  if(refreshUni) refreshUni.addEventListener("click", ()=>loadLPData("sepolia"));
+
+  const refreshPancake = document.getElementById("refreshPancake");
+  if(refreshPancake) refreshPancake.addEventListener("click", ()=>loadLPData("bscTestnet"));
+
+  const refreshBridge = document.getElementById("refreshBridge");
+  if(refreshBridge) refreshBridge.addEventListener("click", loadBridgeStatus);
+
+  // initial loads
   await loadTokenData("sepolia");
   await loadTokenData("bscTestnet");
   await loadLPData("sepolia");
   await loadLPData("bscTestnet");
-  if(document.getElementById("bridgeStatus")) await loadBridgeStatus();
+  await loadBridgeStatus();
 
-  // Button Hooks
-  const connectBtn = document.getElementById("connectBtn");
-  if(connectBtn) connectBtn.addEventListener("click", connectWallet);
-
-  const loadSepolia = document.getElementById("loadSepoliaPair");
-  if(loadSepolia) loadSepolia.addEventListener("click", ()=>loadLPData("sepolia"));
-
-  const loadBsc = document.getElementById("loadBscPair");
-  if(loadBsc) loadBsc.addEventListener("click", ()=>loadLPData("bscTestnet"));
+  setupAutoRefresh();
 });

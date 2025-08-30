@@ -5,15 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>MYUSDT Dashboard</title>
   <link rel="stylesheet" href="styles.css">
-
-  <!-- Load Web3 first -->
   <script src="https://cdn.jsdelivr.net/npm/web3@1.9.0/dist/web3.min.js"></script>
-
-  <!-- Load Ethers.js once -->
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
 </head>
-
-
 <body>
   <header>
     <h1>MYUSDT Multi-Chain Dashboard</h1>
@@ -39,14 +33,6 @@
       <p><strong>Address:</strong> <span id="walletAddress">Not connected</span></p>
       <p><strong>Balance:</strong> <span id="userBalance">Loading...</span></p>
       <button id="connectBtn">🔗 Connect Wallet</button>
-    </section>
-
-    <!-- LP Pool Info -->
-    <section class="card">
-      <h2>Liquidity Pools</h2>
-      <button id="loadSepoliaPair">Load Sepolia MYUSDT/ETH Pool</button>
-      <button id="loadBscPair">Load BSC Testnet MYUSDT/BNB Pool</button>
-      <pre id="pairInfo">Pool info will appear here...</pre>
     </section>
   </main>
 
