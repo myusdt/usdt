@@ -1,26 +1,26 @@
 // =============================
-// MYUSDT Dashboard JS
+// MYUSDT Dashboard JS (Mainnet)
 // =============================
 
 // CONFIGURATION
 const RPCS = {
-  sepolia: "https://sepolia.infura.io/v3/afc846803e384cc583a4a260f693cd71",
-  bscTestnet: "https://data-seed-prebsc-1-s1.binance.org:8545/"
+  ethereum: "https://mainnet.infura.io/v3/afc846803e384cc583a4a260f693cd71",
+  bsc: "https://bsc-dataseed.binance.org/"
 };
 
 const PAIRS = {
-  sepolia: "0x64be8fb20f5e6217D4D7B90ddca515F96B3A86fe",
-  bscTestnet: "0x0c39D41371D397d8172024c097c0B69E88788160"
+  ethereum: "0xbDAbc9E735848EF2E95a45A08c7AFDF39708Ef14", // MYUSDT/WETH
+  bsc: "0x0bD7b3cB7B9b4cF7E8C0Bf3f4BfE9E1cB6f4eC1B"      // MYUSDT/WBNB
 };
 
 const TOKENS = {
-  sepolia: { MYUSDT: "0xc6C465b8E56757DB8dC54D7E11D0194182FEB475" },
-  bscTestnet: { MYUSDT: "0x1c7e5094413Be138C1561D05c2Be92364d74b5b2" }
+  ethereum: { MYUSDT: "0x833D07dF94656A0e1633E3F155d10C45366A3Ea2" },
+  bsc: { MYUSDT: "0x5ff19C505CCA2fa457cBd060f0CB5473C8400E70" }
 };
 
 const BRIDGE = {
-  locker: "0xe5b80EF9bCb9F98E79A8490D51424797BD882b26", // Sepolia
-  minter: "0x0052338C058D1D29690ecf90f56f5cCc45E250be"  // BSC Testnet
+  locker: "0xe5b80EF9bCb9F98E79A8490D51424797BD882b26", // Ethereum Mainnet
+  minter: "0x0052338C058D1D29690ecf90f56f5cCc45E250be"  // BSC Mainnet
 };
 
 const ERC20_ABI = [
@@ -62,7 +62,7 @@ async function connectWallet(){
 // -----------------------------
 // LOAD TOKEN DATA
 // -----------------------------
-async function loadTokenData(chain="sepolia") {
+async function loadTokenData(chain="ethereum") {
   try {
     const provider = new ethers.providers.JsonRpcProvider(RPCS[chain]);
     const token = new ethers.Contract(TOKENS[chain].MYUSDT, ERC20_ABI, provider);
@@ -94,8 +94,8 @@ async function loadLPData(chain) {
     const token1 = await pair.token1();
 
     const text = `Token0: ${token0}\nToken1: ${token1}\nReserves: ${reserves[0]} / ${reserves[1]}`;
-    if(chain === "sepolia") document.getElementById("uniReserves").innerText = text;
-    if(chain === "bscTestnet") document.getElementById("pancakeReserves").innerText = text;
+    if(chain === "ethereum") document.getElementById("uniReserves").innerText = text;
+    if(chain === "bsc") document.getElementById("pancakeReserves").innerText = text;
   } catch (err) {
     console.error(err);
   }
@@ -106,29 +106,27 @@ async function loadLPData(chain) {
 // -----------------------------
 async function loadBridgeStatus() {
   try {
-    const providerSepolia = new ethers.providers.JsonRpcProvider(RPCS.sepolia);
-    const providerBsc = new ethers.providers.JsonRpcProvider(RPCS.bscTestnet);
+    const providerEth = new ethers.providers.JsonRpcProvider(RPCS.ethereum);
+    const providerBsc = new ethers.providers.JsonRpcProvider(RPCS.bsc);
 
-    const locker = new ethers.Contract(BRIDGE.locker, ERC20_ABI, providerSepolia);
+    const locker = new ethers.Contract(BRIDGE.locker, ERC20_ABI, providerEth);
     const minter = new ethers.Contract(BRIDGE.minter, ERC20_ABI, providerBsc);
 
-    const sepoEvents = await locker.queryFilter("Transfer", 0, "latest");
+    const ethEvents = await locker.queryFilter("Transfer", 0, "latest");
     const bscEvents = await minter.queryFilter("Transfer", 0, "latest");
 
-    const lastSepo = sepoEvents[sepoEvents.length-1];
+    const lastEth = ethEvents[ethEvents.length-1];
     const lastBsc = bscEvents[bscEvents.length-1];
 
-    let text = "Sepolia Last Transfer:\n";
-    text += lastSepo ? `${lastSepo.args.from} → ${lastSepo.args.to}, ${formatBalance(lastSepo.args.value)}\n\n` : "None\n\n";
-    text += "BSC Testnet Last Transfer:\n";
+    let text = "Ethereum Last Transfer:\n";
+    text += lastEth ? `${lastEth.args.from} → ${lastEth.args.to}, ${formatBalance(lastEth.args.value)}\n\n` : "None\n\n";
+    text += "BSC Last Transfer:\n";
     text += lastBsc ? `${lastBsc.args.from} → ${lastBsc.args.to}, ${formatBalance(lastBsc.args.value)}\n` : "None";
 
     const statusEl = document.getElementById("bridgeStatus");
     if(statusEl) statusEl.innerText = text;
   } catch (err) {
     console.error("Bridge error:", err);
-    console.log("Sepolia events:", sepoEvents);
-    console.log("BSC events:", bscEvents);
   }
 }
 
@@ -137,10 +135,10 @@ async function loadBridgeStatus() {
 // -----------------------------
 function setupAutoRefresh(){
   setInterval(()=>{
-    loadTokenData("sepolia");
-    loadTokenData("bscTestnet");
-    loadLPData("sepolia");
-    loadLPData("bscTestnet");
+    loadTokenData("ethereum");
+    loadTokenData("bsc");
+    loadLPData("ethereum");
+    loadLPData("bsc");
     loadBridgeStatus();
     const ts = document.getElementById("last-updated");
     if(ts) ts.innerText = `Last updated: ${new Date().toLocaleString()}`;
@@ -156,27 +154,27 @@ window.addEventListener("load", async ()=>{
 
   const refreshBtn = document.getElementById("refresh-btn");
   if(refreshBtn) refreshBtn.addEventListener("click", ()=>{
-    loadTokenData("sepolia");
-    loadTokenData("bscTestnet");
-    loadLPData("sepolia");
-    loadLPData("bscTestnet");
+    loadTokenData("ethereum");
+    loadTokenData("bsc");
+    loadLPData("ethereum");
+    loadLPData("bsc");
     loadBridgeStatus();
   });
 
   const refreshUni = document.getElementById("refreshUni");
-  if(refreshUni) refreshUni.addEventListener("click", ()=>loadLPData("sepolia"));
+  if(refreshUni) refreshUni.addEventListener("click", ()=>loadLPData("ethereum"));
 
   const refreshPancake = document.getElementById("refreshPancake");
-  if(refreshPancake) refreshPancake.addEventListener("click", ()=>loadLPData("bscTestnet"));
+  if(refreshPancake) refreshPancake.addEventListener("click", ()=>loadLPData("bsc"));
 
   const refreshBridge = document.getElementById("refreshBridge");
   if(refreshBridge) refreshBridge.addEventListener("click", loadBridgeStatus);
 
   // initial loads
-  await loadTokenData("sepolia");
-  await loadTokenData("bscTestnet");
-  await loadLPData("sepolia");
-  await loadLPData("bscTestnet");
+  await loadTokenData("ethereum");
+  await loadTokenData("bsc");
+  await loadLPData("ethereum");
+  await loadLPData("bsc");
   await loadBridgeStatus();
 
   setupAutoRefresh();
