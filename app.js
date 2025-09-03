@@ -49,18 +49,25 @@ function formatBalance(balance, decimals = 18) {
 // WALLET CONNECTION
 // -----------------------------
 async function connectWallet() {
-  if (window.ethereum && window.ethereum.isMetaMask) {
-    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+  if (typeof window.ethereum === "undefined") {
+    alert("MetaMask is required!");
+    return;
+  }
+
+  // force MetaMask only
+  if (!window.ethereum.isMetaMask) {
+    alert("Please use MetaMask (disable Trust Wallet extension if installed).");
+    return;
+  }
+
+  try {
+    const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
     const userAddress = accounts[0];
     document.getElementById("walletAddress").innerText = userAddress;
     return userAddress;
-  } else {
-    alert("Please install MetaMask!");
-  }
-  const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-  const userAddress = accounts[0];
-  document.getElementById("walletAddress").innerText = userAddress;
-  return userAddress;
+  } catch (err) {
+    console.error("Wallet connection failed:", err);
+    alert("Failed to connect to MetaMask.");
 }
 
 // -----------------------------
