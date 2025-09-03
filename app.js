@@ -48,10 +48,14 @@ function formatBalance(balance, decimals = 18) {
 // -----------------------------
 // WALLET CONNECTION
 // -----------------------------
-async function connectWallet(){
-  if (!window.ethereum) {
-    alert("MetaMask is required!");
-    return;
+async function connectWallet() {
+  if (window.ethereum && window.ethereum.isMetaMask) {
+    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+    const userAddress = accounts[0];
+    document.getElementById("walletAddress").innerText = userAddress;
+    return userAddress;
+  } else {
+    alert("Please install MetaMask!");
   }
   const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
   const userAddress = accounts[0];
