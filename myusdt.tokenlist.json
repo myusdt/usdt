@@ -1,6 +1,6 @@
 {
   "name": "MYUSDT Official Token List",
-  "logoURI": "https://myusdt.github.io/usdt/myusdt_logo.png",
+  "logoURI": "https://myusdt.github.io/usdt/logo.png",
   "keywords": ["myusdt", "stable", "community"],
   "timestamp": "2025-09-03T17:15:00+05:00",
   "version": { "major": 1, "minor": 0, "patch": 0 },
@@ -15,7 +15,7 @@
       "symbol": "USDT",
       "name": "MMYUSDT",
       "decimals": 18,
-      "logoURI": "https://myusdt.github.io/usdt/myusdt_logo.png",
+      "logoURI": "https://myusdt.github.io/usdt/logo.png",
       "tags": ["official", "primary"]
     },
     {
@@ -24,7 +24,7 @@
       "symbol": "USDT",
       "name": "MYUSDT",
       "decimals": 18,
-      "logoURI": "https://myusdt.github.io/usdt/myusdt_logo.png",
+      "logoURI": "https://myusdt.github.io/usdt/logo.png",
       "tags": ["official", "primary"]
     }
   ]
