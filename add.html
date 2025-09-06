@@ -24,36 +24,49 @@
   <p class="msg" id="statusMsg">Waiting for wallet…</p>
 
   <script>
-    // Must match the on-chain contract's actual symbol() value
-    const TOKEN = {
-      address: "0x5ff19C505CCA2fa457cBd060f0CB5473C8400E70",
-      symbol: "USDT", // matches contract's symbol()
-      decimals: 18,
-      image: "https://myusdt.github.io/usdt/myusdt_logo.png"
-    };
+  const TOKEN = {
+    address: "0x5ff19C505CCA2fa457cBd060f0CB5473C8400E70",
+    symbol: "USDT", // must match contract's symbol()
+    decimals: 18,
+    image: "https://myusdt.github.io/usdt/myusdt_logo.png"
+  };
 
-    async function addToken() {
-      if (!window.ethereum) {
-        document.getElementById("statusMsg").textContent =
-          "❌ No wallet detected. Please open this link inside MetaMask, Trust Wallet, or another Web3 wallet browser.";
-        return;
-      }
-      try {
-        const wasAdded = await window.ethereum.request({
-          method: "wallet_watchAsset",
-          params: { type: "ERC20", options: TOKEN }
-        });
-        document.getElementById("statusMsg").textContent = wasAdded
-          ? "🎉 MYUSDT (USDT) added to your wallet!"
-          : "ℹ️ Token add was cancelled.";
-      } catch (err) {
-        console.error(err);
-        document.getElementById("statusMsg").textContent =
-          "❌ Failed to add token: " + (err.message || err);
-      }
+  const providers = [];
+
+  // Listen for wallet announcements
+  window.addEventListener("eip6963:announceProvider", (event) => {
+    providers.push(event.detail.provider);
+  });
+
+  // Request all wallets to announce themselves
+  window.dispatchEvent(new Event("eip6963:requestProvider"));
+
+  async function chooseWalletAndAddToken() {
+    if (providers.length === 0) {
+      alert("No wallets detected. Please install MetaMask, Trust Wallet, etc.");
+      return;
     }
 
-    window.addEventListener("load", addToken);
-  </script>
+    // Simple prompt — replace with a nicer modal if you want
+    const names = providers.map((p, i) => `${i + 1}: ${p.info.name}`).join("\n");
+    const choice = prompt(`Select a wallet:\n${names}`);
+    const selected = providers[parseInt(choice) - 1];
+    if (!selected) return;
+
+    try {
+      const wasAdded = await selected.request({
+        method: "wallet_watchAsset",
+        params: { type: "ERC20", options: TOKEN }
+      });
+      alert(wasAdded ? "🎉 MYUSDT added!" : "ℹ️ User canceled add");
+    } catch (err) {
+      console.error(err);
+      alert("❌ Failed to add token: " + (err.message || err));
+    }
+  }
+
+  window.addEventListener("load", chooseWalletAndAddToken);
+</script>
+  
 </body>
 </html>
