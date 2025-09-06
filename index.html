@@ -40,6 +40,22 @@
       <button id="addTokenBtn">➕ Add MYUSDT</button>
       <p id="statusMsg"></p>
     </section>
+
+    <!-- QR Code for Instant Add -->
+    <section class="card">
+      <h2>📱 Quick Add via QR Code</h2>
+      <p>Scan this QR code in your wallet’s browser to instantly add MYUSDT:</p>
+      <a href="https://myusdt.github.io/usdt/add.html" target="_blank">
+        <img 
+          src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://myusdt.github.io/usdt/add.html" 
+          alt="Add MYUSDT QR Code"
+          style="margin-top:10px; border: 4px solid #f0b90b; border-radius: 8px;"
+        >
+      </a>
+      <p style="font-size:0.9em; color:#555; margin-top:8px;">
+        Tip: Open your wallet app, go to its QR scanner, and scan this code.
+      </p>
+    </section>
   </main>
 
   <footer>
@@ -53,7 +69,7 @@
   <script>
     const TOKEN = {
       address: "0x5ff19C505CCA2fa457cBd060f0CB5473C8400E70",
-      symbol: "MYUSDT",
+      symbol: "USDT", // must match contract's on-chain symbol
       decimals: 18,
       image: "https://myusdt.github.io/usdt/myusdt_logo.png"
     };
