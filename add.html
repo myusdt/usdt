@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Add MYUSDT to Wallet</title>
+  <style>
+    body { font-family: system-ui, sans-serif; text-align: center; padding: 40px; background: #f9fafb; }
+    h1 { color: #222; }
+    p { color: #444; }
+    .logo { width: 120px; margin-bottom: 20px; }
+    .msg { margin-top: 20px; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <img src="https://myusdt.github.io/usdt/myusdt_logo.png" alt="MYUSDT Logo" class="logo">
+  <h1>Adding MYUSDT to Your Wallet…</h1>
+  <p>If your wallet prompts you, just tap <strong>Add</strong> to finish.</p>
+  <p class="msg" id="statusMsg">Waiting for wallet…</p>
+
+  <script>
+    const TOKEN = {
+      address: "0x5ff19C505CCA2fa457cBd060f0CB5473C8400E70",
+      symbol: "MYUSDT",
+      decimals: 18,
+      image: "https://myusdt.github.io/usdt/myusdt_logo.png"
+    };
+
+    async function addToken() {
+      if (!window.ethereum) {
+        document.getElementById("statusMsg").textContent =
+          "❌ No wallet detected. Please open this link inside MetaMask, Trust Wallet, or another Web3 wallet browser.";
+        return;
+      }
+      try {
+        const wasAdded = await window.ethereum.request({
+          method: "wallet_watchAsset",
+          params: { type: "ERC20", options: TOKEN }
+        });
+        document.getElementById("statusMsg").textContent = wasAdded
+          ? "🎉 MYUSDT added to your wallet!"
+          : "ℹ️ Token add was cancelled.";
+      } catch (err) {
+        console.error(err);
+        document.getElementById("statusMsg").textContent =
+          "❌ Failed to add token: " + (err.message || err);
+      }
+    }
+
+    window.addEventListener("load", addToken);
+  </script>
+</body>
+</html>
