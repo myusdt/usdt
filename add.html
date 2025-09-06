@@ -87,14 +87,36 @@
   // Request all wallets to announce themselves
   window.dispatchEvent(new Event("eip6963:requestProvider"));
 
-  function promptWalletChoice() {
-    if (providers.length === 0) {
+  function fallbackToWindowEthereum() {
+    const eth = window.ethereum;
+    if (!eth) {
       document.getElementById("statusMsg").textContent =
-        "❌ No wallets detected. Please open this link inside MetaMask, Trust Wallet, or another Web3 wallet browser.";
+        "❌ No wallet detected. Please open this link inside MetaMask, Trust Wallet, or another Web3 wallet browser.";
       return;
     }
 
-    // Build a numbered list of wallet names
+    eth.request({
+      method: "wallet_watchAsset",
+      params: { type: "ERC20", options: TOKEN }
+    })
+    .then((wasAdded) => {
+      document.getElementById("statusMsg").textContent = wasAdded
+        ? `🎉 ${TOKEN.symbol} added to your wallet!`
+        : "ℹ️ Token add was cancelled.";
+    })
+    .catch((err) => {
+      console.error(err);
+      document.getElementById("statusMsg").textContent =
+        "❌ Failed to add token: " + (err.message || err);
+    });
+  }
+
+  function promptWalletChoice() {
+    if (providers.length === 0) {
+      fallbackToWindowEthereum();
+      return;
+    }
+
     const names = providers.map((p, i) => `${i + 1}: ${p.info.name}`).join("\n");
     const choice = prompt(`Select a wallet:\n${names}`);
     const selected = providers[parseInt(choice) - 1];
@@ -116,9 +138,8 @@
     });
   }
 
-  // Wait a short moment for wallets to announce before prompting
   window.addEventListener("load", () => {
-    setTimeout(promptWalletChoice, 500); // 0.5 second delay
+    setTimeout(promptWalletChoice, 500);
   });
 </script>
 </body>
