@@ -15,6 +15,44 @@
     p { color: #444; }
     .logo { width: 120px; margin-bottom: 20px; }
     .msg { margin-top: 20px; font-weight: bold; }
+
+    /* Modal styles */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 999;
+      left: 0; top: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.6);
+      justify-content: center;
+      align-items: center;
+    }
+    .modal-content {
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      max-width: 320px;
+      width: 90%;
+      text-align: center;
+    }
+    .wallet-option {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px;
+      margin: 8px 0;
+      border: 2px solid #eee;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+    .wallet-option:hover {
+      border-color: #f0b90b;
+    }
+    .wallet-option img {
+      width: 32px;
+      height: 32px;
+    }
   </style>
 </head>
 <body>
@@ -23,50 +61,87 @@
   <p>If your wallet prompts you, just tap <strong>Add</strong> to finish.</p>
   <p class="msg" id="statusMsg">Waiting for wallet…</p>
 
+  <!-- Wallet Picker Modal -->
+  <div class="modal" id="walletModal">
+    <div class="modal-content">
+      <h3>Select a Wallet</h3>
+      <div id="walletList"></div>
+    </div>
+  </div>
+
   <script>
-  const TOKEN = {
-    address: "0x5ff19C505CCA2fa457cBd060f0CB5473C8400E70",
-    symbol: "USDT", // must match contract's symbol()
-    decimals: 18,
-    image: "https://myusdt.github.io/usdt/myusdt_logo.png"
-  };
+    const TOKEN = {
+      address: "0x5ff19C505CCA2fa457cBd060f0CB5473C8400E70",
+      symbol: "USDT", // must match contract's symbol()
+      decimals: 18,
+      image: "https://myusdt.github.io/usdt/myusdt_logo.png"
+    };
 
-  const providers = [];
+    const providers = [];
 
-  // Listen for wallet announcements
-  window.addEventListener("eip6963:announceProvider", (event) => {
-    providers.push(event.detail.provider);
-  });
+    // Listen for wallet announcements
+    window.addEventListener("eip6963:announceProvider", (event) => {
+      providers.push(event.detail.provider);
+    });
 
-  // Request all wallets to announce themselves
-  window.dispatchEvent(new Event("eip6963:requestProvider"));
+    // Request all wallets to announce themselves
+    window.dispatchEvent(new Event("eip6963:requestProvider"));
 
-  async function chooseWalletAndAddToken() {
-    if (providers.length === 0) {
-      alert("No wallets detected. Please install MetaMask, Trust Wallet, etc.");
-      return;
-    }
+    function showWalletModal() {
+      const modal = document.getElementById("walletModal");
+      const walletList = document.getElementById("walletList");
+      walletList.innerHTML = "";
 
-    // Simple prompt — replace with a nicer modal if you want
-    const names = providers.map((p, i) => `${i + 1}: ${p.info.name}`).join("\n");
-    const choice = prompt(`Select a wallet:\n${names}`);
-    const selected = providers[parseInt(choice) - 1];
-    if (!selected) return;
+      if (providers.length === 0) {
+        document.getElementById("statusMsg").textContent =
+          "❌ No wallets detected. Please open this link inside MetaMask, Trust Wallet, or another Web3 wallet browser.";
+        return;
+      }
 
-    try {
-      const wasAdded = await selected.request({
-        method: "wallet_watchAsset",
-        params: { type: "ERC20", options: TOKEN }
+      providers.forEach((p, i) => {
+        const option = document.createElement("div");
+        option.className = "wallet-option";
+        option.innerHTML = `
+          <img src="${p.info.icon}" alt="${p.info.name} logo">
+          <span>${p.info.name}</span>
+        `;
+        option.onclick = () => {
+          modal.style.display = "none";
+          addTokenWithProvider(p);
+        };
+        walletList.appendChild(option);
       });
-      alert(wasAdded ? "🎉 MYUSDT added!" : "ℹ️ User canceled add");
-    } catch (err) {
-      console.error(err);
-      alert("❌ Failed to add token: " + (err.message || err));
-    }
-  }
 
-  window.addEventListener("load", chooseWalletAndAddToken);
-</script>
-  
+      modal.style.display = "flex";
+    }
+
+    async function addTokenWithProvider(provider) {
+      try {
+        const wasAdded = await provider.request({
+          method: "wallet_watchAsset",
+          params: { type: "ERC20", options: TOKEN }
+        });
+        document.getElementById("statusMsg").textContent = wasAdded
+          ? `🎉 ${TOKEN.symbol} added to your wallet!`
+          : "ℹ️ Token add was cancelled.";
+      } catch (err) {
+        console.error(err);
+        document.getElementById("statusMsg").textContent =
+          "❌ Failed to add token: " + (err.message || err);
+      }
+    }
+
+    // Wait a moment for wallets to announce before showing modal
+    window.addEventListener("load", () => {
+      setTimeout(showWalletModal, 500);
+    });
+
+    // Close modal if clicking outside content
+    document.getElementById("walletModal").onclick = (e) => {
+      if (e.target.id === "walletModal") {
+        e.currentTarget.style.display = "none";
+      }
+    };
+  </script>
 </body>
 </html>
