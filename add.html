@@ -70,77 +70,78 @@
   </div>
 
   <script>
-  const TOKEN = {
-    address: "0x5ff19C505CCA2fa457cBd060f0CB5473C8400E70",
-    symbol: "USDT", // must match contract's symbol()
-    decimals: 18,
-    image: "https://myusdt.github.io/usdt/myusdt_logo.png"
-  };
+    const TOKEN = {
+      address: "0x5ff19C505CCA2fa457cBd060f0CB5473C8400E70",
+      symbol: "USDT", // must match contract's symbol()
+      decimals: 18,
+      image: "https://myusdt.github.io/usdt/myusdt_logo.png"
+    };
 
-  const providers = [];
+    const providers = [];
 
-  // Listen for wallet announcements
-  window.addEventListener("eip6963:announceProvider", (event) => {
-    providers.push(event.detail.provider);
-  });
+    // Listen for wallet announcements
+    window.addEventListener("eip6963:announceProvider", (event) => {
+      providers.push(event.detail.provider);
+    });
 
-  // Request all wallets to announce themselves
-  window.dispatchEvent(new Event("eip6963:requestProvider"));
+    // Request all wallets to announce themselves
+    window.dispatchEvent(new Event("eip6963:requestProvider"));
 
-  function fallbackToWindowEthereum() {
-    const eth = window.ethereum;
-    if (!eth) {
-      document.getElementById("statusMsg").textContent =
-        "❌ No wallet detected. Please open this link inside MetaMask, Trust Wallet, or another Web3 wallet browser.";
-      return;
+    function showWalletModal() {
+      const modal = document.getElementById("walletModal");
+      const walletList = document.getElementById("walletList");
+      walletList.innerHTML = "";
+
+      if (providers.length === 0) {
+        document.getElementById("statusMsg").textContent =
+          "❌ No wallets detected. Please open this link inside MetaMask, Trust Wallet, or another Web3 wallet browser.";
+        return;
+      }
+
+      providers.forEach((p, i) => {
+        const option = document.createElement("div");
+        option.className = "wallet-option";
+        option.innerHTML = `
+          <img src="${p.info.icon}" alt="${p.info.name} logo">
+          <span>${p.info.name}</span>
+        `;
+        option.onclick = () => {
+          modal.style.display = "none";
+          addTokenWithProvider(p);
+        };
+        walletList.appendChild(option);
+      });
+
+      modal.style.display = "flex";
     }
 
-    eth.request({
-      method: "wallet_watchAsset",
-      params: { type: "ERC20", options: TOKEN }
-    })
-    .then((wasAdded) => {
-      document.getElementById("statusMsg").textContent = wasAdded
-        ? `🎉 ${TOKEN.symbol} added to your wallet!`
-        : "ℹ️ Token add was cancelled.";
-    })
-    .catch((err) => {
-      console.error(err);
-      document.getElementById("statusMsg").textContent =
-        "❌ Failed to add token: " + (err.message || err);
-    });
-  }
-
-  function promptWalletChoice() {
-    if (providers.length === 0) {
-      fallbackToWindowEthereum();
-      return;
+    async function addTokenWithProvider(provider) {
+      try {
+        const wasAdded = await provider.request({
+          method: "wallet_watchAsset",
+          params: { type: "ERC20", options: TOKEN }
+        });
+        document.getElementById("statusMsg").textContent = wasAdded
+          ? `🎉 ${TOKEN.symbol} added to your wallet!`
+          : "ℹ️ Token add was cancelled.";
+      } catch (err) {
+        console.error(err);
+        document.getElementById("statusMsg").textContent =
+          "❌ Failed to add token: " + (err.message || err);
+      }
     }
 
-    const names = providers.map((p, i) => `${i + 1}: ${p.info.name}`).join("\n");
-    const choice = prompt(`Select a wallet:\n${names}`);
-    const selected = providers[parseInt(choice) - 1];
-    if (!selected) return;
-
-    selected.request({
-      method: "wallet_watchAsset",
-      params: { type: "ERC20", options: TOKEN }
-    })
-    .then((wasAdded) => {
-      document.getElementById("statusMsg").textContent = wasAdded
-        ? `🎉 ${TOKEN.symbol} added to your wallet!`
-        : "ℹ️ Token add was cancelled.";
-    })
-    .catch((err) => {
-      console.error(err);
-      document.getElementById("statusMsg").textContent =
-        "❌ Failed to add token: " + (err.message || err);
+    // Wait a moment for wallets to announce before showing modal
+    window.addEventListener("load", () => {
+      setTimeout(showWalletModal, 500);
     });
-  }
 
-  window.addEventListener("load", () => {
-    setTimeout(promptWalletChoice, 500);
-  });
-</script>
+    // Close modal if clicking outside content
+    document.getElementById("walletModal").onclick = (e) => {
+      if (e.target.id === "walletModal") {
+        e.currentTarget.style.display = "none";
+      }
+    };
+  </script>
 </body>
 </html>
