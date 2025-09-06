@@ -234,3 +234,10 @@
     }
 
     document.getElementById("addTokenBtn
+
+
+  document.addEventListener("DOMContentLoaded", () => {
+    document.getElementById("addTokenBtn").onclick = () => {
+      setTimeout(showWalletModal, 300);
+  };
+});
