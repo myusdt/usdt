@@ -7,6 +7,45 @@
   <link rel="stylesheet" href="styles.css">
   <script src="https://cdn.jsdelivr.net/npm/web3@1.9.0/dist/web3.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+  <style>
+    /* Wallet Picker Modal Styles */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 999;
+      left: 0; top: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.6);
+      justify-content: center;
+      align-items: center;
+    }
+    .modal-content {
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      max-width: 320px;
+      width: 90%;
+      text-align: center;
+    }
+    .wallet-option {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px;
+      margin: 8px 0;
+      border: 2px solid #eee;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+    .wallet-option:hover {
+      border-color: #f0b90b;
+    }
+    .wallet-option img {
+      width: 32px;
+      height: 32px;
+    }
+  </style>
 </head>
 <body>
   <header>
@@ -65,6 +104,14 @@
     </div>
     <p>Powered by Web3.js & ethers.js | MYUSDT Multi-Chain Dashboard</p>
   </footer>
+
+  <!-- Wallet Picker Modal -->
+  <div class="modal" id="walletModal">
+    <div class="modal-content">
+      <h3>Select a Wallet</h3>
+      <div id="walletList"></div>
+    </div>
+  </div>
 
   <script>
     const TOKEN = {
@@ -137,37 +184,55 @@
       }
     }
 
-    document.getElementById("switchBscBtn").onclick = async () => {
-      const ok = await ensureBsc();
-      setStatus(ok ? "🌐 On BSC mainnet ✅" : "❌ Not on BSC");
-    };
+    // Multi-wallet detection
+    const providers = [];
+    window.addEventListener("eip6963:announceProvider", (event) => {
+      providers.push(event.detail.provider);
+    });
+    window.dispatchEvent(new Event("eip6963:requestProvider"));
 
-    document.getElementById("addTokenBtn").onclick = async () => {
+    function showWalletModal() {
+      const modal = document.getElementById("walletModal");
+      const walletList = document.getElementById("walletList");
+      walletList.innerHTML = "";
+
+      if (providers.length === 0) {
+        setStatus("❌ No wallets detected. Please open in MetaMask, Trust Wallet, etc.");
+        return;
+      }
+
+      providers.forEach((p) => {
+        const option = document.createElement("div");
+        option.className = "wallet-option";
+        option.innerHTML = `
+          <img src="${p.info.icon}" alt="${p.info.name} logo">
+          <span>${p.info.name}</span>
+        `;
+        option.onclick = () => {
+          modal.style.display = "none";
+          addTokenWithProvider(p);
+        };
+        walletList.appendChild(option);
+      });
+
+      modal.style.display = "flex";
+    }
+
+    async function addTokenWithProvider(provider) {
       try {
-        const eth = getProvider();
-        if (!eth) return;
         const ok = await ensureBsc();
         if (!ok) return;
-        const wasAdded = await eth.request({
+        const wasAdded = await provider.request({
           method: "wallet_watchAsset",
-          params: {
-            type: "ERC20",
-            options: {
-              address: TOKEN.address,
-              symbol: TOKEN.symbol,
-              decimals: TOKEN.decimals,
-              image: TOKEN.image
-            }
-          }
+          params: { type: "ERC20", options: TOKEN }
         });
         setStatus(wasAdded ? "🎉 MYUSDT added to wallet!" : "ℹ️ User canceled add");
       } catch (e) {
         console.error(e);
         setStatus(`❌ Add token failed: ${e.message || e}`);
       }
-    };
-  </script>
+    }
 
-  <script src="app.js"></script>
-</body>
-</html>
+    document.getElementById("addTokenBtn").onclick = () => {
+  setTimeout(showWalletModal, 300);
+};
