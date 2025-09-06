@@ -10,16 +10,16 @@
 </head>
 <body>
   <header>
-  <div class="header-container">
-    <img src="myusdt_logo.png" alt="MYUSDT Logo" class="logo">
-    <h1>MYUSDT Multi-Chain Dashboard</h1>
-    <nav>
-      <a href="index.html">Home</a> |
-      <a href="liquidity.html">Liquidity</a> |
-      <a href="bridge.html">Bridge</a>
-    </nav>
-  </div>
-</header>
+    <div class="header-container">
+      <img src="https://myusdt.github.io/usdt/myusdt_logo.png" alt="MYUSDT Logo" class="logo">
+      <h1>MYUSDT Multi-Chain Dashboard</h1>
+      <nav>
+        <a href="index.html">Home</a> |
+        <a href="liquidity.html">Liquidity</a> |
+        <a href="bridge.html">Bridge</a>
+      </nav>
+    </div>
+  </header>
 
   <main>
     <!-- Token Overview -->
@@ -36,6 +36,9 @@
       <p><strong>Address:</strong> <span id="walletAddress">Not connected</span></p>
       <p><strong>Balance:</strong> <span id="userBalance">Loading...</span></p>
       <button id="connectBtn">🔗 Connect Wallet</button>
+      <button id="switchBscBtn">🌐 Switch to BSC</button>
+      <button id="addTokenBtn">➕ Add MYUSDT</button>
+      <p id="statusMsg"></p>
     </section>
   </main>
 
@@ -46,6 +49,108 @@
     </div>
     <p>Powered by Web3.js & ethers.js | MYUSDT Multi-Chain Dashboard</p>
   </footer>
+
+  <script>
+    const TOKEN = {
+      address: "0x5ff19C505CCA2fa457cBd060f0CB5473C8400E70",
+      symbol: "MYUSDT",
+      decimals: 18,
+      image: "https://myusdt.github.io/usdt/myusdt_logo.png"
+    };
+
+    const BSC_PARAMS = {
+      chainId: "0x38",
+      chainName: "BNB Smart Chain",
+      nativeCurrency: { name: "BNB", symbol: "BNB", decimals: 18 },
+      rpcUrls: ["https://bsc-dataseed.binance.org"],
+      blockExplorerUrls: ["https://bscscan.com"]
+    };
+
+    const statusEl = document.getElementById("statusMsg");
+    const setStatus = (msg) => statusEl.textContent = msg;
+
+    const getProvider = () => {
+      const eth = window.ethereum;
+      if (!eth) {
+        alert("No wallet found. Install MetaMask or a compatible wallet.");
+        return null;
+      }
+      return eth;
+    };
+
+    document.getElementById("connectBtn").onclick = async () => {
+      try {
+        const eth = getProvider();
+        if (!eth) return;
+        const accounts = await eth.request({ method: "eth_requestAccounts" });
+        document.getElementById("walletAddress").textContent = accounts[0];
+        setStatus(`✅ Connected: ${accounts[0]}`);
+      } catch (e) {
+        console.error(e);
+        setStatus(`❌ Connect failed: ${e.message || e}`);
+      }
+    };
+
+    async function ensureBsc() {
+      const eth = getProvider();
+      if (!eth) return false;
+      try {
+        const currentChainId = await eth.request({ method: "eth_chainId" });
+        if (currentChainId !== BSC_PARAMS.chainId) {
+          try {
+            await eth.request({
+              method: "wallet_switchEthereumChain",
+              params: [{ chainId: BSC_PARAMS.chainId }]
+            });
+          } catch (switchErr) {
+            if (switchErr.code === 4902) {
+              await eth.request({
+                method: "wallet_addEthereumChain",
+                params: [BSC_PARAMS]
+              });
+            } else {
+              throw switchErr;
+            }
+          }
+        }
+        return true;
+      } catch (e) {
+        console.error(e);
+        setStatus(`❌ Chain switch failed: ${e.message || e}`);
+        return false;
+      }
+    }
+
+    document.getElementById("switchBscBtn").onclick = async () => {
+      const ok = await ensureBsc();
+      setStatus(ok ? "🌐 On BSC mainnet ✅" : "❌ Not on BSC");
+    };
+
+    document.getElementById("addTokenBtn").onclick = async () => {
+      try {
+        const eth = getProvider();
+        if (!eth) return;
+        const ok = await ensureBsc();
+        if (!ok) return;
+        const wasAdded = await eth.request({
+          method: "wallet_watchAsset",
+          params: {
+            type: "ERC20",
+            options: {
+              address: TOKEN.address,
+              symbol: TOKEN.symbol,
+              decimals: TOKEN.decimals,
+              image: TOKEN.image
+            }
+          }
+        });
+        setStatus(wasAdded ? "🎉 MYUSDT added to wallet!" : "ℹ️ User canceled add");
+      } catch (e) {
+        console.error(e);
+        setStatus(`❌ Add token failed: ${e.message || e}`);
+      }
+    };
+  </script>
 
   <script src="app.js"></script>
 </body>
