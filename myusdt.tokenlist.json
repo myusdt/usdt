@@ -1,6 +1,6 @@
 {
   "name": "MYUSDT Official Token List",
-  "logoURI": "https://myusdt.github.io/usdt/logo.png",
+  "logoURI": "https://myusdt.github.io/usdt/logo2.png",
   "keywords": ["myusdt", "stable", "community"],
   "timestamp": "2025-09-03T17:15:00+05:00",
   "version": { "major": 1, "minor": 0, "patch": 0 },
@@ -9,15 +9,6 @@
     "primary": { "name": "primary", "description": "Primary base pairs" }
   },
   "tokens": [
-    {
-      "chainId": 1,
-      "address": "0x833D07dF94656A0e1633E3F155d10C45366A3Ea2",
-      "symbol": "USDT",
-      "name": "MMYUSDT",
-      "decimals": 18,
-      "logoURI": "https://myusdt.github.io/usdt/logo.png",
-      "tags": ["official", "primary"]
-    },
     {
       "chainId": 56,
       "address": "0x5ff19C505CCA2fa457cBd060f0CB5473C8400E70",
