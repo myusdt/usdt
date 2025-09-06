@@ -5,7 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Add MYUSDT to Wallet</title>
   <style>
-    body { font-family: system-ui, sans-serif; text-align: center; padding: 40px; background: #f9fafb; }
+    body {
+      font-family: system-ui, sans-serif;
+      text-align: center;
+      padding: 40px;
+      background: #f9fafb;
+    }
     h1 { color: #222; }
     p { color: #444; }
     .logo { width: 120px; margin-bottom: 20px; }
@@ -19,9 +24,10 @@
   <p class="msg" id="statusMsg">Waiting for wallet…</p>
 
   <script>
+    // Must match the on-chain contract's actual symbol() value
     const TOKEN = {
       address: "0x5ff19C505CCA2fa457cBd060f0CB5473C8400E70",
-      symbol: "MYUSDT",
+      symbol: "USDT", // matches contract's symbol()
       decimals: 18,
       image: "https://myusdt.github.io/usdt/myusdt_logo.png"
     };
@@ -38,7 +44,7 @@
           params: { type: "ERC20", options: TOKEN }
         });
         document.getElementById("statusMsg").textContent = wasAdded
-          ? "🎉 MYUSDT added to your wallet!"
+          ? "🎉 MYUSDT (USDT) added to your wallet!"
           : "ℹ️ Token add was cancelled.";
       } catch (err) {
         console.error(err);
