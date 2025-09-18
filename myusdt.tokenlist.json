@@ -2,18 +2,18 @@
   "name": "MYUSDT Official Token List",
   "logoURI": "https://myusdt.github.io/usdt/logo2.png",
   "keywords": ["myusdt", "stable", "community"],
-  "timestamp": "2025-09-03T17:15:00+05:00",
-  "version": { "major": 1, "minor": 0, "patch": 0 },
+  "timestamp": "2025-09-19T17:15:00+05:00",
+  "version": { "major": 0, "minor": 0.1, "patch": 0 },
   "tags": {
-    "official": { "name": "official", "description": "Verified by MYUSDT team" },
+    "official": { "name": "soon to be official", "description": "Verified by MYUSDT Pink Team" },
     "primary": { "name": "primary", "description": "Primary base pairs" }
   },
   "tokens": [
     {
-      "chainId": 56,
-      "address": "0x5ff19C505CCA2fa457cBd060f0CB5473C8400E70",
+      "chainId": 97,
+      "address": "0x36FEDA9142B7b72BB46b613Fe68844c50B0AC34b",
       "symbol": "USDT",
-      "name": "MYUSDT",
+      "name": "Tether USD",
       "decimals": 18,
       "logoURI": "https://myusdt.github.io/usdt/logo2.png",
       "tags": ["official", "primary"]
